@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 )
@@ -70,15 +69,20 @@ func findSubstrInFile(str, path string) {
 	}
 	defer file.Close()
 
-	data := make([]byte, 64)
+	fileScanner := bufio.NewScanner(file)
 
-	for {
-		n, err := file.Read(data)
-		if err == io.EOF {
-			break
+	var i int
+	for fileScanner.Scan(){
+		i+=1
+		if pos(str, fileScanner.Text(), 1) != -1 {
+			fmt.Printf("%s:%d - %s\n", path, i, fileScanner.Text())
 		}
-		fmt.Print(string(data[:n]))
 	}
+
+	if err := fileScanner.Err(); err != nil {
+		fmt.Printf("Error while reading file: %s", err)
+	}
+	file.Close()
 }
 
 // Find a substring in directory and print through Stdout

@@ -72,10 +72,11 @@ func findSubstrInFile(str, path string) {
 	fileScanner := bufio.NewScanner(file)
 
 	var i int
+	separatedPath := strings.Split(path, "\\")
 	for fileScanner.Scan(){
 		i+=1
 		if pos(str, fileScanner.Text(), 1) != -1 {
-			fmt.Printf("%s:%d - %s\n", path, i, fileScanner.Text())
+			fmt.Printf("%s:%d - %s\n", separatedPath[len(separatedPath)-1], i, fileScanner.Text())
 		}
 	}
 

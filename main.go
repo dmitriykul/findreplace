@@ -1,18 +1,25 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 )
 
 func main(){
+	var text string
 	args := os.Args[1:]
 	strToFind := args[1]
-	source := args[2]
+	if len(args) == 2 {
+		myScanner := bufio.NewScanner(os.Stdin)
+		myScanner.Scan()
+		text = myScanner.Text()
+		// fmt.Fscan(os.Stdin, &text)
+	}
 	n := 0
 	fmt.Println(args)
 	for i := 1; n != -1; i++ {
-		n = pos(strToFind, source, i)
+		n = pos(strToFind, text, i)
 		fmt.Println(n)
 	}
 	//if args[0] == "find" {

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 func main(){
@@ -22,6 +23,7 @@ func main(){
 		n = pos(strToFind, text, i)
 		fmt.Println(n)
 	}
+	fmt.Println(replace(text, strToFind, "ra"))
 	//if args[0] == "find" {
 	//	stringToFind = args[1]
 	//}
@@ -50,6 +52,10 @@ func pos(c, s string, n int) int {
 	}
 
 	return -1
+}
+
+func replace(s, old, new string) string {
+	return strings.ReplaceAll(s, old, new)
 }
 
 // Find a substring in text through Stdin console input

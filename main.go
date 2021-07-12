@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
@@ -12,26 +13,11 @@ func main(){
 	args := os.Args[1:]
 	strToFind := args[1]
 	if len(args) == 2 {
-		myScanner := bufio.NewScanner(os.Stdin)
-		myScanner.Scan()
-		text = myScanner.Text()
-		// fmt.Fscan(os.Stdin, &text)
-	}
-	n := 0
-	fmt.Println(args)
-	for i := 1; n != -1; i++ {
-		n = pos(strToFind, text, i)
-		fmt.Println(n)
+		findSubstr(strToFind)
+	} else if len(args) == 3 {
+		findSubstrInFile(strToFind, args[2])
 	}
 	fmt.Println(replace(text, strToFind, "ra"))
-	//if args[0] == "find" {
-	//	stringToFind = args[1]
-	//}
-	//else if args[0] == "replace" {
-	//	stringToFind = args[1]
-	//	stringToReplace = args[2]
-	//}
-	//fmt.Printf("%B", findSubstr("hello"))
 }
 
 func pos(c, s string, n int) int {
@@ -61,14 +47,38 @@ func replace(s, old, new string) string {
 // Find a substring in text through Stdin console input
 func findSubstr(str string) {
 	var text string
-	fmt.Fscan(os.Stdin, &text)
+	myScanner := bufio.NewScanner(os.Stdin)
+	myScanner.Scan()
+	text = myScanner.Text()
 
+	n := 0
+	for i := 1; n != -1; i++ {
+		n = pos(str, text, i)
+		if n != -1 {
+			fmt.Println(n)
+		}
+	}
 
 }
 
 // Find a substring in file and print through Stdout
-func findSubstrInFile(str, file string) {
+func findSubstrInFile(str, path string) {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	defer file.Close()
 
+	data := make([]byte, 64)
+
+	for {
+		n, err := file.Read(data)
+		if err == io.EOF {
+			break
+		}
+		fmt.Print(string(data[:n]))
+	}
 }
 
 // Find a substring in directory and print through Stdout

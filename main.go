@@ -11,7 +11,11 @@ import (
 )
 
 func main(){
-	args := os.Args[1:]
+	findReplacer(os.Args)
+}
+
+func findReplacer(args []string) {
+	args = os.Args[1:]
 
 	// find str file
 	// find str dir
@@ -20,8 +24,8 @@ func main(){
 	// replace str newStr dir
 	// replace str newStr
 	switch args[0] {
-		case "find":
-			{
+	case "find":
+		{
 			if len(args) == 2 {
 				findSubstr(args[1])
 			} else if len(args) == 3 {
@@ -32,9 +36,9 @@ func main(){
 				}
 			}
 			break
-			}
-		case "replace":
-			{
+		}
+	case "replace":
+		{
 			if len(args) == 3 {
 				replaceSubstr(args[1], args[2])
 			} else if len(args) == 4 {
@@ -45,7 +49,7 @@ func main(){
 				}
 			}
 			break
-			}
+		}
 	}
 }
 

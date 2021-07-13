@@ -3,7 +3,10 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -13,8 +16,10 @@ func main(){
 	strToFind := args[1]
 	if len(args) == 2 {
 		findSubstr(strToFind)
+	} else if args[0] == "replace" {
+		replaceSubstrInFile(args[1], args[2], args[3])
 	} else if len(args) == 3 {
-		findSubstrInFile(strToFind, args[2])
+		findSubstrInDirectory(strToFind, args[2])
 	}
 	fmt.Println(replace(text, strToFind, "ra"))
 }
@@ -81,24 +86,52 @@ func findSubstrInFile(str, path string) {
 	}
 
 	if err := fileScanner.Err(); err != nil {
-		fmt.Printf("Error while reading file: %s", err)
+		//fmt.Printf("Error while reading file: %s", err)
 	}
 	file.Close()
 }
 
 // Find a substring in directory and print through Stdout
 func findSubstrInDirectory(str, dir string) {
-
+	err := filepath.Walk(dir,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			findSubstrInFile(str, path)
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // Replace a substring in text though Stdin console input
-func replaceSubstr(str, repStr string) {
-
+func replaceSubstr(old, new string) {
+	var text string
+	myScanner := bufio.NewScanner(os.Stdin)
+	myScanner.Scan()
+	text = myScanner.Text()
+	fmt.Println(replace(text, old, new))
 }
 
 // Replace a substring in file
 func replaceSubstrInFile(str, repStr, file string) {
+	input, err := ioutil.ReadFile(file)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
+	lines := strings.Split(string(input), "\n")
+
+	for _, line := range lines {
+		strings.ReplaceAll(line, str, repStr)
+	}
+	output := strings.Join(lines, "\n")
+	err = ioutil.WriteFile(file, []byte(output), 0644)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 // Replace a substring in directory

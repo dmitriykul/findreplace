@@ -55,14 +55,13 @@ func checkPath(path string) bool {
 		panic(err)
 	}
 	fi, err := f.Stat()
+	f.Close()
 	if err != nil {
 		panic(err)
 	}
 	if fi.IsDir() {
-		f.Close()
 		return true
 	} else {
-		f.Close()
 		return false
 	}
 }

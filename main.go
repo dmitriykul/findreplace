@@ -154,7 +154,7 @@ func findSubstrInDirectory(str, dir string) {
 	}
 }
 
-// Replace a substring in text though Stdin console input
+// Replace a substring in text through Stdin console input
 func replaceSubstr(old, new string) {
 	var text string
 	myScanner := bufio.NewScanner(os.Stdin)

@@ -11,17 +11,60 @@ import (
 )
 
 func main(){
-	var text string
 	args := os.Args[1:]
-	strToFind := args[1]
-	if len(args) == 2 {
-		findSubstr(strToFind)
-	} else if args[0] == "replace" {
-		replaceSubstrInFile(args[1], args[2], args[3])
-	} else if len(args) == 3 {
-		findSubstrInDirectory(strToFind, args[2])
+
+	// find str file
+	// find str dir
+	// find str
+	// replace str newStr file
+	// replace str newStr dir
+	// replace str newStr
+	switch args[0] {
+		case "find":
+			{
+			if len(args) == 2 {
+				findSubstr(args[1])
+			} else if len(args) == 3 {
+				if checkPath(args[2]) {
+					findSubstrInDirectory(args[1], args[2])
+				} else {
+					findSubstrInFile(args[1], args[2])
+				}
+			}
+			break
+			}
+		case "replace":
+			{
+			if len(args) == 3 {
+				replaceSubstr(args[1], args[2])
+			} else if len(args) == 4 {
+				if checkPath(args[3]) {
+					replaceSubstrInDirectory(args[1], args[2], args[3])
+				} else {
+					replaceSubstrInFile(args[1], args[2], args[3])
+				}
+			}
+			break
+			}
 	}
-	fmt.Println(replace(text, strToFind, "ra"))
+}
+
+func checkPath(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		panic(err)
+	}
+	fi, err := f.Stat()
+	if err != nil {
+		panic(err)
+	}
+	if fi.IsDir() {
+		f.Close()
+		return true
+	} else {
+		f.Close()
+		return false
+	}
 }
 
 func pos(c, s string, n int) int {
@@ -86,7 +129,7 @@ func findSubstrInFile(str, path string) {
 	}
 
 	if err := fileScanner.Err(); err != nil {
-		//fmt.Printf("Error while reading file: %s", err)
+		fmt.Printf("Error while reading file: %s", err)
 	}
 	file.Close()
 }
@@ -98,7 +141,9 @@ func findSubstrInDirectory(str, dir string) {
 			if err != nil {
 				return err
 			}
-			findSubstrInFile(str, path)
+			if info.IsDir()==false {
+				findSubstrInFile(str, path)
+			}
 			return nil
 		})
 	if err != nil {
@@ -124,8 +169,8 @@ func replaceSubstrInFile(str, repStr, file string) {
 
 	lines := strings.Split(string(input), "\n")
 
-	for _, line := range lines {
-		strings.ReplaceAll(line, str, repStr)
+	for i, line := range lines {
+		lines[i] = strings.ReplaceAll(line, str, repStr)
 	}
 	output := strings.Join(lines, "\n")
 	err = ioutil.WriteFile(file, []byte(output), 0644)
@@ -136,5 +181,17 @@ func replaceSubstrInFile(str, repStr, file string) {
 
 // Replace a substring in directory
 func replaceSubstrInDirectory(str, repStr, dir string) {
-
+	err := filepath.Walk(dir,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir()==false {
+				replaceSubstrInFile(str, repStr, path)
+			}
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
 }

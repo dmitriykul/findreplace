@@ -11,10 +11,10 @@ import (
 )
 
 func main(){
-	findReplacer(os.Args)
+	findReplace(os.Args)
 }
 
-func findReplacer(args []string) {
+func findReplace(args []string) {
 	args = os.Args[1:]
 
 	// find str file
@@ -25,35 +25,29 @@ func findReplacer(args []string) {
 	// replace str newStr
 	switch args[0] {
 	case "find":
-		{
 			if len(args) == 2 {
-				findSubstr(args[1])
+				findSubstrInConsoleInput(args[1])
 			} else if len(args) == 3 {
-				if checkPath(args[2]) {
+				if isDirectory(args[2]) {
 					findSubstrInDirectory(args[1], args[2])
 				} else {
 					findSubstrInFile(args[1], args[2])
 				}
 			}
-			break
-		}
 	case "replace":
-		{
 			if len(args) == 3 {
-				replaceSubstr(args[1], args[2])
+				replaceSubstrInConsoleInput(args[1], args[2])
 			} else if len(args) == 4 {
-				if checkPath(args[3]) {
+				if isDirectory(args[3]) {
 					replaceSubstrInDirectory(args[1], args[2], args[3])
 				} else {
 					replaceSubstrInFile(args[1], args[2], args[3])
 				}
 			}
-			break
-		}
 	}
 }
 
-func checkPath(path string) bool {
+func isDirectory(path string) bool {
 	f, err := os.Open(path)
 	if err != nil {
 		panic(err)
@@ -70,17 +64,17 @@ func checkPath(path string) bool {
 	}
 }
 
-func pos(c, s string, n int) int {
-	var lenC, lenS, j int
-	lenC = len(c)
-	lenS = len(s)
+func findPosition(subStr, text string, count int) int {
+	lenC := len(subStr)
+	lenS := len(text)
+	j := 0
 
 	for i := 0; i <= lenS - lenC; i++ {
-		for j = 0; j < lenC && s[i + j] == c[j]; j++ {}
+		for j = 0; j < lenC && text[i + j] == subStr[j]; j++ {}
 
 		if j == lenC {
-			if n - 1 != 0 {
-				n--
+			if count- 1 != 0 {
+				count--
 			} else {
 				return i
 			}
@@ -90,25 +84,24 @@ func pos(c, s string, n int) int {
 	return -1
 }
 
-func replace(s, old, new string) string {
-	return strings.ReplaceAll(s, old, new)
-}
-
 // Find a substring in text through Stdin console input
-func findSubstr(str string) {
+func findSubstrInConsoleInput(str string) {
 	var text string
 	myScanner := bufio.NewScanner(os.Stdin)
 	myScanner.Scan()
 	text = myScanner.Text()
 
-	n := 0
+	/*n := 0
 	for i := 1; n != -1; i++ {
-		n = pos(str, text, i)
+		n = findPosition(str, text, i)
 		if n != -1 {
 			fmt.Println(n)
 		}
-	}
+	}*/
 
+	if findPosition(str, text, 1) != -1 {
+		fmt.Printf("%d - %s\n", 1, myScanner.Text())
+	}
 }
 
 // Find a substring in file and print through Stdout
@@ -126,7 +119,7 @@ func findSubstrInFile(str, path string) {
 	separatedPath := strings.Split(path, "\\")
 	for fileScanner.Scan(){
 		i+=1
-		if pos(str, fileScanner.Text(), 1) != -1 {
+		if findPosition(str, fileScanner.Text(), 1) != -1 {
 			fmt.Printf("%s:%d - %s\n", separatedPath[len(separatedPath)-1], i, fileScanner.Text())
 		}
 	}
@@ -155,15 +148,14 @@ func findSubstrInDirectory(str, dir string) {
 }
 
 // Replace a substring in text through Stdin console input
-func replaceSubstr(old, new string) {
+func replaceSubstrInConsoleInput(old, new string) {
 	var text string
 	myScanner := bufio.NewScanner(os.Stdin)
 	myScanner.Scan()
 	text = myScanner.Text()
-	fmt.Println(replace(text, old, new))
+	fmt.Println(strings.ReplaceAll(text, old, new))
 }
 
-// Replace a substring in file
 func replaceSubstrInFile(str, repStr, file string) {
 	input, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -182,7 +174,6 @@ func replaceSubstrInFile(str, repStr, file string) {
 	}
 }
 
-// Replace a substring in directory
 func replaceSubstrInDirectory(str, repStr, dir string) {
 	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {

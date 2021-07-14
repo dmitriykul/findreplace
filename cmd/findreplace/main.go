@@ -1,10 +1,10 @@
 package main
 
 import (
-	"findreplace/pkg/findreplace/app"
+	"findreplace/pkg/findreplace/infrastructure"
 	"os"
 )
 
 func main() {
-	app.FindReplace(os.Args[1:])
+	infrastructure.Deliver(os.Args[1:])
 }

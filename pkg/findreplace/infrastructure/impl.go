@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"bufio"
-	"findreplace/pkg/findreplace/app"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,17 +10,10 @@ import (
 )
 
 type Impl struct {
-	args []string
+
 }
 
-func NewImpl(args []string) *Impl {
-	i := new(Impl)
-	i.args = args
-
-	return i
-}
-
-func (i Impl) FindPosition(subStr, text string, count int) int {
+func (i *Impl) FindPosition(subStr, text string, count int) int {
 	lenC := len(subStr)
 	lenS := len(text)
 	j := 0
@@ -42,13 +34,13 @@ func (i Impl) FindPosition(subStr, text string, count int) int {
 	return -1
 }
 
-func (i Impl) FindSubstrInConsoleInput(str string) error {
+func (i *Impl) FindSubstrInConsoleInput(str string) error {
 	scanner := bufio.NewScanner(os.Stdin)
 	lineNo := 0
 	for scanner.Scan() {
 		lineNo += 1
 		text := scanner.Text()
-		if FindPosition(str, text, 1) != -1 {
+		if i.FindPosition(str, text, 1) != -1 {
 			fmt.Printf("%d - %s\n", lineNo, scanner.Text())
 		}
 	}
@@ -60,7 +52,7 @@ func (i Impl) FindSubstrInConsoleInput(str string) error {
 	return nil
 }
 
-func (i Impl) FindSubstrInFile(str, path string) error {
+func (i *Impl) FindSubstrInFile(str, path string) error {
 	file, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err)
@@ -74,7 +66,7 @@ func (i Impl) FindSubstrInFile(str, path string) error {
 	separatedPath := strings.Split(path, "\\")
 	for fileScanner.Scan() {
 		lineNo += 1
-		if FindPosition(str, fileScanner.Text(), 1) != -1 {
+		if i.FindPosition(str, fileScanner.Text(), 1) != -1 {
 			fmt.Printf("%s:%d - %s\n", separatedPath[len(separatedPath)-1], lineNo, fileScanner.Text())
 		}
 	}
@@ -87,14 +79,14 @@ func (i Impl) FindSubstrInFile(str, path string) error {
 	return nil
 }
 
-func (i Impl) FindSubstrInDirectory(str, dir string) error {
+func (i *Impl) FindSubstrInDirectory(str, dir string) error {
 	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 			if info.IsDir() == false {
-				if err := FindSubstrInFile(str, path); err != nil {
+				if err := i.FindSubstrInFile(str, path); err != nil {
 					return err
 				}
 			}
@@ -107,7 +99,7 @@ func (i Impl) FindSubstrInDirectory(str, dir string) error {
 	return nil
 }
 
-func (i Impl) ReplaceSubstrInConsoleInput(old, new string) error {
+func (i *Impl) ReplaceSubstrInConsoleInput(old, new string) error {
 	var text string
 	myScanner := bufio.NewScanner(os.Stdin)
 	myScanner.Scan()
@@ -121,7 +113,7 @@ func (i Impl) ReplaceSubstrInConsoleInput(old, new string) error {
 	return nil
 }
 
-func (i Impl) ReplaceSubstrInFile(str, repStr, file string) error {
+func (i *Impl) ReplaceSubstrInFile(str, repStr, file string) error {
 	input, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
@@ -141,14 +133,14 @@ func (i Impl) ReplaceSubstrInFile(str, repStr, file string) error {
 	return nil
 }
 
-func (i Impl) ReplaceSubstrInDirectory(str, repStr, dir string) error {
+func (i *Impl) ReplaceSubstrInDirectory(str, repStr, dir string) error {
 	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 			if info.IsDir() == false {
-				if err := ReplaceSubstrInFile(str, repStr, path); err != nil {
+				if err := i.ReplaceSubstrInFile(str, repStr, path); err != nil {
 					return err
 				}
 			}

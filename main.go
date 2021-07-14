@@ -10,15 +10,13 @@ import (
 	"strings"
 )
 
-func main(){
-	if err := findReplace(os.Args); err != nil {
+func main() {
+	if err := findReplace(os.Args[1:]); err != nil {
 		log.Fatalln(err)
 	}
 }
 
 func findReplace(args []string) error {
-	args = os.Args[1:]
-
 	// find str file
 	// find str dir
 	// find str
@@ -27,39 +25,36 @@ func findReplace(args []string) error {
 	// replace str newStr
 	switch args[0] {
 	case "find":
-			if len(args) == 2 {
-				if err := findSubstrInConsoleInput(args[1]); err != nil {
-					return err
-				}
-			} else if len(args) == 3 {
-				isDir, err := isDirectory(args[2])
-				if err == nil && isDir {
-					if err := findSubstrInDirectory(args[1], args[2]); err != nil {
-						return err
-					}
-				} else {
-					if err := findSubstrInFile(args[1], args[2]); err != nil {
-						return err
-					}
-				}
+		if len(args) == 2 {
+			return findSubstrInConsoleInput(args[1])
+		}
+		if len(args) == 3 {
+			isDir, err := isDirectory(args[2])
+			if err != nil {
+				return err
 			}
+			if isDir {
+				return findSubstrInDirectory(args[1], args[2])
+			}
+			return findSubstrInFile(args[1], args[2])
+		}
 	case "replace":
-			if len(args) == 3 {
-				if err := replaceSubstrInConsoleInput(args[1], args[2]); err != nil {
+		if len(args) == 3 {
+			if err := replaceSubstrInConsoleInput(args[1], args[2]); err != nil {
+				return err
+			}
+		} else if len(args) == 4 {
+			isDir, err := isDirectory(args[3])
+			if err == nil && isDir {
+				if err := replaceSubstrInDirectory(args[1], args[2], args[3]); err != nil {
+					return nil
+				}
+			} else {
+				if err := replaceSubstrInFile(args[1], args[2], args[3]); err != nil {
 					return err
 				}
-			} else if len(args) == 4 {
-				isDir, err := isDirectory(args[3])
-				if err == nil && isDir {
-					if err := replaceSubstrInDirectory(args[1], args[2], args[3]); err != nil {
-						return nil
-					}
-				} else {
-					if err := replaceSubstrInFile(args[1], args[2], args[3]); err != nil {
-						return err
-					}
-				}
 			}
+		}
 	}
 	return nil
 }
@@ -74,11 +69,7 @@ func isDirectory(path string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if fi.IsDir() {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return fi.IsDir(), nil
 }
 
 func findPosition(subStr, text string, count int) int {
@@ -86,11 +77,12 @@ func findPosition(subStr, text string, count int) int {
 	lenS := len(text)
 	j := 0
 
-	for i := 0; i <= lenS - lenC; i++ {
-		for j = 0; j < lenC && text[i + j] == subStr[j]; j++ {}
+	for i := 0; i <= lenS-lenC; i++ {
+		for j = 0; j < lenC && text[i+j] == subStr[j]; j++ {
+		}
 
 		if j == lenC {
-			if count- 1 != 0 {
+			if count-1 != 0 {
 				count--
 			} else {
 				return i
@@ -103,25 +95,18 @@ func findPosition(subStr, text string, count int) int {
 
 // Find a substring in text through Stdin console input
 func findSubstrInConsoleInput(str string) error {
-	var text string
-	myScanner := bufio.NewScanner(os.Stdin)
-	myScanner.Scan()
-	text = myScanner.Text()
-
-	if err := myScanner.Err(); err != nil {
-		return err
+	scanner := bufio.NewScanner(os.Stdin)
+	lineNo := 0
+	for scanner.Scan() {
+		lineNo += 1
+		text := scanner.Text()
+		if findPosition(str, text, 1) != -1 {
+			fmt.Printf("%d - %s\n", lineNo, scanner.Text())
+		}
 	}
 
-	/*n := 0
-	for i := 1; n != -1; i++ {
-		n = findPosition(str, text, i)
-		if n != -1 {
-			fmt.Println(n)
-		}
-	}*/
-
-	if findPosition(str, text, 1) != -1 {
-		fmt.Printf("%d - %s\n", 1, myScanner.Text())
+	if err := scanner.Err(); err != nil {
+		return err
 	}
 
 	return nil
@@ -138,12 +123,12 @@ func findSubstrInFile(str, path string) error {
 
 	fileScanner := bufio.NewScanner(file)
 
-	var i int
+	lineNo := 0
 	separatedPath := strings.Split(path, "\\")
-	for fileScanner.Scan(){
-		i+=1
+	for fileScanner.Scan() {
+		lineNo += 1
 		if findPosition(str, fileScanner.Text(), 1) != -1 {
-			fmt.Printf("%s:%d - %s\n", separatedPath[len(separatedPath)-1], i, fileScanner.Text())
+			fmt.Printf("%s:%d - %s\n", separatedPath[len(separatedPath)-1], lineNo, fileScanner.Text())
 		}
 	}
 
@@ -162,7 +147,7 @@ func findSubstrInDirectory(str, dir string) error {
 			if err != nil {
 				return err
 			}
-			if info.IsDir()==false {
+			if info.IsDir() == false {
 				if err := findSubstrInFile(str, path); err != nil {
 					return err
 				}
@@ -217,7 +202,7 @@ func replaceSubstrInDirectory(str, repStr, dir string) error {
 			if err != nil {
 				return err
 			}
-			if info.IsDir()==false {
+			if info.IsDir() == false {
 				if err := replaceSubstrInFile(str, repStr, path); err != nil {
 					return err
 				}

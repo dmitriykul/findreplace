@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +27,8 @@ func findReplace(args []string) {
 			if len(args) == 2 {
 				findSubstrInConsoleInput(args[1])
 			} else if len(args) == 3 {
-				if isDirectory(args[2]) {
+				isDir, err := isDirectory(args[2])
+				if err == nil && isDir {
 					findSubstrInDirectory(args[1], args[2])
 				} else {
 					findSubstrInFile(args[1], args[2])
@@ -38,7 +38,8 @@ func findReplace(args []string) {
 			if len(args) == 3 {
 				replaceSubstrInConsoleInput(args[1], args[2])
 			} else if len(args) == 4 {
-				if isDirectory(args[3]) {
+				isDir, err := isDirectory(args[3])
+				if err == nil && isDir {
 					replaceSubstrInDirectory(args[1], args[2], args[3])
 				} else {
 					replaceSubstrInFile(args[1], args[2], args[3])
@@ -47,20 +48,20 @@ func findReplace(args []string) {
 	}
 }
 
-func isDirectory(path string) bool {
+func isDirectory(path string) (bool, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 	fi, err := f.Stat()
 	f.Close()
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 	if fi.IsDir() {
-		return true
+		return true, nil
 	} else {
-		return false
+		return false, nil
 	}
 }
 
@@ -105,7 +106,7 @@ func findSubstrInConsoleInput(str string) {
 }
 
 // Find a substring in file and print through Stdout
-func findSubstrInFile(str, path string) {
+func findSubstrInFile(str, path string) error {
 	file, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err)
@@ -125,13 +126,15 @@ func findSubstrInFile(str, path string) {
 	}
 
 	if err := fileScanner.Err(); err != nil {
-		fmt.Printf("Error while reading file: %s", err)
+		return err
 	}
 	file.Close()
+
+	return nil
 }
 
 // Find a substring in directory and print through Stdout
-func findSubstrInDirectory(str, dir string) {
+func findSubstrInDirectory(str, dir string) error {
 	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -143,8 +146,10 @@ func findSubstrInDirectory(str, dir string) {
 			return nil
 		})
 	if err != nil {
-		log.Println(err)
+		return err
 	}
+
+	return nil
 }
 
 // Replace a substring in text through Stdin console input
@@ -156,10 +161,10 @@ func replaceSubstrInConsoleInput(old, new string) {
 	fmt.Println(strings.ReplaceAll(text, old, new))
 }
 
-func replaceSubstrInFile(str, repStr, file string) {
+func replaceSubstrInFile(str, repStr, file string) error {
 	input, err := ioutil.ReadFile(file)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	lines := strings.Split(string(input), "\n")
@@ -170,11 +175,13 @@ func replaceSubstrInFile(str, repStr, file string) {
 	output := strings.Join(lines, "\n")
 	err = ioutil.WriteFile(file, []byte(output), 0644)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
+
+	return nil
 }
 
-func replaceSubstrInDirectory(str, repStr, dir string) {
+func replaceSubstrInDirectory(str, repStr, dir string) error {
 	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -186,6 +193,8 @@ func replaceSubstrInDirectory(str, repStr, dir string) {
 			return nil
 		})
 	if err != nil {
-		log.Println(err)
+		return err
 	}
+
+	return nil
 }

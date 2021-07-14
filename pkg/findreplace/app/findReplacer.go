@@ -1,6 +1,7 @@
 package app
 
 type FindReplacer interface {
+	FindPosition(subStr, text string, count int) int
 	FindSubstrInConsoleInput(str string) error
 	FindSubstrInFile(str, path string) error
 	FindSubstrInDirectory(str, dir string) error

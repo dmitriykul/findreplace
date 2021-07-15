@@ -1,11 +1,17 @@
 package app
 
+type FindParams struct {
+	Substr string
+	Path string // optional, uses Stdin if empty
+}
+
+type ReplaceParams struct {
+	Substr string
+	Replacement string
+	Path string // optional, uses Stdin/Stdout if empty
+}
+
 type FindReplacer interface {
-	FindPosition(subStr, text string, count int) int
-	FindSubstrInConsoleInput(str string) error
-	FindSubstrInFile(str, path string) error
-	FindSubstrInDirectory(str, dir string) error
-	ReplaceSubstrInConsoleInput(old, new string) error
-	ReplaceSubstrInFile(str, repStr, file string) error
-	ReplaceSubstrInDirectory(str, repStr, dir string) error
+	FindSubstr(params FindParams) error
+	ReplaceSubstr(params ReplaceParams) error
 }

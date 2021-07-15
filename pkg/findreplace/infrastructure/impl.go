@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"bufio"
+	"findreplace/pkg/findreplace/app"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -13,7 +14,52 @@ type Impl struct {
 
 }
 
-func (i *Impl) FindPosition(subStr, text string, count int) int {
+func (i *Impl) FindSubstr(params app.FindParams) error {
+	if params.Path == "" {
+		return i.findSubstrInConsoleInput(params.Substr)
+	}
+	isDir, err := isDirectory(params.Path)
+	if err != nil {
+		return err
+	}
+	if isDir {
+		return i.findSubstrInDirectory(params.Substr, params.Path)
+	} else {
+		return i.findSubstrInFile(params.Substr, params.Path)
+	}
+
+
+}
+
+func (i *Impl) ReplaceSubstr(params app.ReplaceParams) error {
+	if params.Path == "" {
+		return i.replaceSubstrInConsoleInput(params.Substr, params.Replacement)
+	}
+	isDir, err := isDirectory(params.Path)
+	if err != nil {
+		return err
+	}
+	if isDir {
+		return i.replaceSubstrInDirectory(params.Substr, params.Replacement, params.Path)
+	} else {
+		return i.replaceSubstrInDirectory(params.Substr, params.Replacement, params.Path)
+	}
+}
+
+func isDirectory(path string) (bool, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return false, err
+	}
+	fi, err := f.Stat()
+	f.Close()
+	if err != nil {
+		return false, err
+	}
+	return fi.IsDir(), nil
+}
+
+func (i *Impl) findPosition(subStr, text string, count int) int {
 	lenC := len(subStr)
 	lenS := len(text)
 	j := 0
@@ -34,13 +80,13 @@ func (i *Impl) FindPosition(subStr, text string, count int) int {
 	return -1
 }
 
-func (i *Impl) FindSubstrInConsoleInput(str string) error {
+func (i *Impl) findSubstrInConsoleInput(str string) error {
 	scanner := bufio.NewScanner(os.Stdin)
 	lineNo := 0
 	for scanner.Scan() {
 		lineNo += 1
 		text := scanner.Text()
-		if i.FindPosition(str, text, 1) != -1 {
+		if i.findPosition(str, text, 1) != -1 {
 			fmt.Printf("%d - %s\n", lineNo, scanner.Text())
 		}
 	}
@@ -52,11 +98,10 @@ func (i *Impl) FindSubstrInConsoleInput(str string) error {
 	return nil
 }
 
-func (i *Impl) FindSubstrInFile(str, path string) error {
+func (i *Impl) findSubstrInFile(str, path string) error {
 	file, err := os.Open(path)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 	defer file.Close()
 
@@ -66,7 +111,7 @@ func (i *Impl) FindSubstrInFile(str, path string) error {
 	separatedPath := strings.Split(path, "\\")
 	for fileScanner.Scan() {
 		lineNo += 1
-		if i.FindPosition(str, fileScanner.Text(), 1) != -1 {
+		if i.findPosition(str, fileScanner.Text(), 1) != -1 {
 			fmt.Printf("%s:%d - %s\n", separatedPath[len(separatedPath)-1], lineNo, fileScanner.Text())
 		}
 	}
@@ -74,19 +119,18 @@ func (i *Impl) FindSubstrInFile(str, path string) error {
 	if err := fileScanner.Err(); err != nil {
 		return err
 	}
-	file.Close()
 
 	return nil
 }
 
-func (i *Impl) FindSubstrInDirectory(str, dir string) error {
+func (i *Impl) findSubstrInDirectory(str, dir string) error {
 	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 			if info.IsDir() == false {
-				if err := i.FindSubstrInFile(str, path); err != nil {
+				if err := i.findSubstrInFile(str, path); err != nil {
 					return err
 				}
 			}
@@ -99,7 +143,7 @@ func (i *Impl) FindSubstrInDirectory(str, dir string) error {
 	return nil
 }
 
-func (i *Impl) ReplaceSubstrInConsoleInput(old, new string) error {
+func (i *Impl) replaceSubstrInConsoleInput(old, new string) error {
 	var text string
 	myScanner := bufio.NewScanner(os.Stdin)
 	myScanner.Scan()
@@ -113,7 +157,7 @@ func (i *Impl) ReplaceSubstrInConsoleInput(old, new string) error {
 	return nil
 }
 
-func (i *Impl) ReplaceSubstrInFile(str, repStr, file string) error {
+func (i *Impl) replaceSubstrInFile(str, repStr, file string) error {
 	input, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
@@ -133,14 +177,14 @@ func (i *Impl) ReplaceSubstrInFile(str, repStr, file string) error {
 	return nil
 }
 
-func (i *Impl) ReplaceSubstrInDirectory(str, repStr, dir string) error {
+func (i *Impl) replaceSubstrInDirectory(str, repStr, dir string) error {
 	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 			if info.IsDir() == false {
-				if err := i.ReplaceSubstrInFile(str, repStr, path); err != nil {
+				if err := i.replaceSubstrInFile(str, repStr, path); err != nil {
 					return err
 				}
 			}

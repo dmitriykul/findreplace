@@ -10,7 +10,7 @@ func NewTextStore() app.TextStore {
 	return &textStore{}
 }
 
-func(t *textStore) StoreText(text, path string) error {
+func(t *textStore) StoreText(text, file string) error {
 
 	return nil
 }

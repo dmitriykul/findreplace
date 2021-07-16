@@ -150,13 +150,7 @@ func (f *FindReplacer) replaceSubstrInFile(str, repStr, file string) error {
 		return err
 	}
 
-	lines := strings.Split(string(input), "\n")
-
-	for i, line := range lines {
-		lines[i] = strings.ReplaceAll(line, str, repStr)
-	}
-	output := strings.Join(lines, "\n")
-	err = ioutil.WriteFile(file, []byte(output), 0644)
+	err = ioutil.WriteFile(file, []byte(strings.ReplaceAll(string(input), str, repStr)), 0644)
 	if err != nil {
 		return err
 	}

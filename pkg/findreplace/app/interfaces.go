@@ -12,5 +12,5 @@ type LineScanner interface {
 }
 
 type TextStore interface {
-	StoreText(text, path string) error
+	StoreText(text, file string) error
 }

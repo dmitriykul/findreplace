@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"findreplace/pkg/findreplace/app"
-	findreplaceinfrastructure "findreplace/pkg/findreplace/infrastructure"
 	"log"
 	"os"
 )
@@ -16,7 +15,7 @@ func main() {
 }
 
 func findReplace(args []string) error {
-	var findReplacer app.FindReplacer = &findreplaceinfrastructure.Impl{}
+	var findReplacer app.FindReplacer
 	switch args[0] {
 	case "find":
 		var params app.FindParams
@@ -44,7 +43,7 @@ func findReplace(args []string) error {
 			params.Path = args[3]
 			return findReplacer.ReplaceSubstr(params)
 		default:
-			return errors.New("missing find arguments: <substr> [<path>]")
+			return errors.New("missing replace arguments: <substr> <newStr> [<path>]")
 		}
 	}
 	return nil

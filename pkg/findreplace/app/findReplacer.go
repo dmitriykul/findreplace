@@ -24,9 +24,9 @@ type FindReplacer struct {
 
 }
 
-func (f *FindReplacer) FindSubstr(params FindParams) error {
+func (f *FindReplacer) FindSubstr(params FindParams, scanner LineScanner) error {
 	if params.Path == "" {
-		return f.findSubstrInConsoleInput(params.Substr)
+		return f.findSubstrInConsoleInput(params.Substr, scanner)
 	}
 	isDir, err := isDirectory(params.Path)
 	if err != nil {
@@ -69,19 +69,17 @@ func isDirectory(path string) (bool, error) {
 	return fi.IsDir(), nil
 }
 
-func (f *FindReplacer) findSubstrInConsoleInput(str string) error {
-	scanner := bufio.NewScanner(os.Stdin)
+func (f *FindReplacer) findSubstrInConsoleInput(str string, scanner LineScanner) error {
 	lineNo := 0
-	for scanner.Scan() {
+	for {
 		lineNo += 1
-		text := scanner.Text()
-		if strings.Contains(text, str) {
-			fmt.Printf("%d - %s\n", lineNo, scanner.Text())
+		text, err := scanner.ReadConsoleLine(os.Stdin)
+		if err != nil {
+			return err
 		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return err
+		if strings.Contains(text, str) {
+			fmt.Printf("%d - %s\n", lineNo, text)
+		}
 	}
 
 	return nil

@@ -7,7 +7,7 @@ type Reporter interface {
 }
 
 type LineScanner interface {
-	ReadConsoleLine(r io.Reader) error
+	ReadConsoleLine(r io.Reader) (string, error)
 	ReadFileLine(path string) error
 }
 

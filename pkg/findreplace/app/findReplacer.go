@@ -73,7 +73,7 @@ func (f *FindReplacer) findSubstrInConsoleInput(str string, scanner LineScanner)
 	lineNo := 0
 	for {
 		lineNo += 1
-		text, err := scanner.ReadConsoleLine(os.Stdin)
+		text, err := scanner.ReadLine()
 		if err != nil {
 			return err
 		}

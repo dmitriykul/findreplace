@@ -39,12 +39,14 @@ func findReplace(args []string) error {
 		case 3:
 			params.Substr = args[1]
 			params.Replacement = args[2]
-			return findReplacer.ReplaceSubstr(params)
+			var storer app.TextStore = infrastructure.NewFileTextStore()
+			return findReplacer.ReplaceSubstr(params, storer)
 		case 4:
 			params.Substr = args[1]
 			params.Replacement = args[2]
 			params.Path = args[3]
-			return findReplacer.ReplaceSubstr(params)
+			var storer app.TextStore = infrastructure.NewFileTextStore()
+			return findReplacer.ReplaceSubstr(params, storer)
 		default:
 			return errors.New("missing replace arguments: <substr> <newStr> [<path>]")
 		}

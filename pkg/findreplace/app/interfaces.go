@@ -9,5 +9,5 @@ type LineScanner interface {
 }
 
 type TextStore interface {
-	StoreText(text, file string) error
+	StoreText(text []byte, file string) error
 }

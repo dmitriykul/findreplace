@@ -41,7 +41,7 @@ func (f *FindReplacer) FindSubstr(params FindParams, scanner LineScanner) error 
 
 }
 
-func (f *FindReplacer) ReplaceSubstr(params ReplaceParams) error {
+func (f *FindReplacer) ReplaceSubstr(params ReplaceParams, store TextStore) error {
 	if params.Path == "" {
 		return f.replaceSubstrInConsoleInput(params.Substr, params.Replacement)
 	}
@@ -50,9 +50,9 @@ func (f *FindReplacer) ReplaceSubstr(params ReplaceParams) error {
 		return err
 	}
 	if isDir {
-		return f.replaceSubstrInDirectory(params.Substr, params.Replacement, params.Path)
+		return f.replaceSubstrInDirectory(params.Substr, params.Replacement, params.Path, store)
 	} else {
-		return f.replaceSubstrInDirectory(params.Substr, params.Replacement, params.Path)
+		return f.replaceSubstrInDirectory(params.Substr, params.Replacement, params.Path, store)
 	}
 }
 
@@ -144,28 +144,25 @@ func (f *FindReplacer) replaceSubstrInConsoleInput(old, new string) error {
 	return nil
 }
 
-func (f *FindReplacer) replaceSubstrInFile(str, repStr, file string) error {
+func (f *FindReplacer) replaceSubstrInFile(str, repStr, file string, store TextStore) error {
 	input, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(file, []byte(strings.ReplaceAll(string(input), str, repStr)), 0644)
-	if err != nil {
-		return err
-	}
+	input = []byte(strings.ReplaceAll(string(input), str, repStr))
 
-	return nil
+	return store.StoreText(input, file)
 }
 
-func (f *FindReplacer) replaceSubstrInDirectory(str, repStr, dir string) error {
+func (f *FindReplacer) replaceSubstrInDirectory(str, repStr, dir string, store TextStore) error {
 	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 			if info.IsDir() == false {
-				if err := f.replaceSubstrInFile(str, repStr, path); err != nil {
+				if err := f.replaceSubstrInFile(str, repStr, path, store); err != nil {
 					return err
 				}
 			}

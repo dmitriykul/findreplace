@@ -34,9 +34,9 @@ func (f *FindReplacer) FindSubstr(params FindParams, scanner LineScanner, report
 		return err
 	}
 	if isDir {
-		return f.findSubstrInDirectory(params.Substr, params.Path, reporter)
+		return f.findSubstrInDirectory(params.Substr, params.Path, reporter, scanner)
 	} else {
-		return f.findSubstrInFile(params.Substr, params.Path, reporter)
+		return f.findSubstrInFile(params.Substr, params.Path, reporter, scanner)
 	}
 
 
@@ -74,55 +74,49 @@ func (f *FindReplacer) findSubstrInConsoleInput(str string, scanner LineScanner,
 	lineNo := 0
 	for {
 		lineNo += 1
-		text, err := scanner.ReadLine()
+		_, text, err := scanner.ReadLine()
 		if err != nil {
 			return err
 		}
 		if strings.Contains(text, str) {
 			s := strconv.Itoa(lineNo) + " - " + text
 			reporter.PrintLine(s)
-			// fmt.Printf("%d - %s\n", lineNo, text)
 		}
 	}
 
 	return nil
 }
 
-func (f *FindReplacer) findSubstrInFile(str, path string, reporter Reporter) error {
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	fileScanner := bufio.NewScanner(file)
-
+func (f *FindReplacer) findSubstrInFile(str, path string, reporter Reporter, scanner LineScanner) error {
 	lineNo := 0
 	separatedPath := strings.Split(path, "\\")
-	for fileScanner.Scan() {
-		lineNo += 1
-		if strings.Contains(fileScanner.Text(), str) {
-			text := separatedPath[len(separatedPath)-1] + ":" + strconv.Itoa(lineNo) + " - " + fileScanner.Text()
-			reporter.PrintLine(text)
-			//fmt.Printf("%s:%d - %s\n", separatedPath[len(separatedPath)-1], lineNo, fileScanner.Text())
+	text := ""
+	res := true
+	for res {
+		var err error
+		res, text, err = scanner.ReadLine()
+		if err != nil {
+			return err
 		}
-	}
-
-	if err := fileScanner.Err(); err != nil {
-		return err
+		lineNo += 1
+		if strings.Contains(text, str) {
+			text := separatedPath[len(separatedPath)-1] + ":" + strconv.Itoa(lineNo) + " - " + text
+			reporter.PrintLine(text)
+		}
 	}
 
 	return nil
 }
 
-func (f *FindReplacer) findSubstrInDirectory(str, dir string, reporter Reporter) error {
+func (f *FindReplacer) findSubstrInDirectory(str, dir string, reporter Reporter, scanner LineScanner) error {
 	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 			if info.IsDir() == false {
-				if err := f.findSubstrInFile(str, path, reporter); err != nil {
+				// scanner, _ := infrastructure.NewFileScanner(path)
+				if err := f.findSubstrInFile(str, path, reporter, scanner); err != nil {
 					return err
 				}
 			}

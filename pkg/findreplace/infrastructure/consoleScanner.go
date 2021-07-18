@@ -14,18 +14,13 @@ func NewConsoleLineScanner() app.LineScanner {
 	return &consoleScanner{}
 }
 
-func(l *consoleScanner) ReadLine() (string, error) {
+func(l *consoleScanner) ReadLine() (bool, string, error) {
 	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
+	res := scanner.Scan()
 	l.text = scanner.Text()
 	if err := scanner.Err(); err != nil {
-		return "", err
+		return res, "", err
 	}
 
-	return l.text, nil
-}
-
-func(l *consoleScanner) ReadFileLine(path string) error {
-
-	return nil
+	return res, l.text, nil
 }

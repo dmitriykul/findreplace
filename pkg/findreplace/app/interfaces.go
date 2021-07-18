@@ -5,7 +5,7 @@ type Reporter interface {
 }
 
 type LineScanner interface {
-	ReadLine() (string, error)
+	ReadLine() (bool, string, error)
 }
 
 type TextStore interface {

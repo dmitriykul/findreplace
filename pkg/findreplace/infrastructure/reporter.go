@@ -1,17 +1,20 @@
 package infrastructure
 
-import "findreplace/pkg/findreplace/app"
+import (
+	"findreplace/pkg/findreplace/app"
+	"fmt"
+)
 
-type reporter struct {
+type consoleReporter struct {
 
 }
 
 func NewReporter() app.Reporter {
-	return &reporter{}
+	return &consoleReporter{}
 }
 
-func(r *reporter) PrintLine(str string) error {
-
+func(r *consoleReporter) PrintLine(str string) error {
+	fmt.Println(str)
 
 	return nil
 }

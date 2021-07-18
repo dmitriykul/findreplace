@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -24,18 +25,18 @@ type FindReplacer struct {
 
 }
 
-func (f *FindReplacer) FindSubstr(params FindParams, scanner LineScanner) error {
+func (f *FindReplacer) FindSubstr(params FindParams, scanner LineScanner, reporter Reporter) error {
 	if params.Path == "" {
-		return f.findSubstrInConsoleInput(params.Substr, scanner)
+		return f.findSubstrInConsoleInput(params.Substr, scanner, reporter)
 	}
 	isDir, err := isDirectory(params.Path)
 	if err != nil {
 		return err
 	}
 	if isDir {
-		return f.findSubstrInDirectory(params.Substr, params.Path)
+		return f.findSubstrInDirectory(params.Substr, params.Path, reporter)
 	} else {
-		return f.findSubstrInFile(params.Substr, params.Path)
+		return f.findSubstrInFile(params.Substr, params.Path, reporter)
 	}
 
 
@@ -69,7 +70,7 @@ func isDirectory(path string) (bool, error) {
 	return fi.IsDir(), nil
 }
 
-func (f *FindReplacer) findSubstrInConsoleInput(str string, scanner LineScanner) error {
+func (f *FindReplacer) findSubstrInConsoleInput(str string, scanner LineScanner, reporter Reporter) error {
 	lineNo := 0
 	for {
 		lineNo += 1
@@ -78,14 +79,16 @@ func (f *FindReplacer) findSubstrInConsoleInput(str string, scanner LineScanner)
 			return err
 		}
 		if strings.Contains(text, str) {
-			fmt.Printf("%d - %s\n", lineNo, text)
+			s := strconv.Itoa(lineNo) + " - " + text
+			reporter.PrintLine(s)
+			// fmt.Printf("%d - %s\n", lineNo, text)
 		}
 	}
 
 	return nil
 }
 
-func (f *FindReplacer) findSubstrInFile(str, path string) error {
+func (f *FindReplacer) findSubstrInFile(str, path string, reporter Reporter) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return err
@@ -99,7 +102,9 @@ func (f *FindReplacer) findSubstrInFile(str, path string) error {
 	for fileScanner.Scan() {
 		lineNo += 1
 		if strings.Contains(fileScanner.Text(), str) {
-			fmt.Printf("%s:%d - %s\n", separatedPath[len(separatedPath)-1], lineNo, fileScanner.Text())
+			text := separatedPath[len(separatedPath)-1] + ":" + strconv.Itoa(lineNo) + " - " + fileScanner.Text()
+			reporter.PrintLine(text)
+			//fmt.Printf("%s:%d - %s\n", separatedPath[len(separatedPath)-1], lineNo, fileScanner.Text())
 		}
 	}
 
@@ -110,14 +115,14 @@ func (f *FindReplacer) findSubstrInFile(str, path string) error {
 	return nil
 }
 
-func (f *FindReplacer) findSubstrInDirectory(str, dir string) error {
+func (f *FindReplacer) findSubstrInDirectory(str, dir string, reporter Reporter) error {
 	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 			if info.IsDir() == false {
-				if err := f.findSubstrInFile(str, path); err != nil {
+				if err := f.findSubstrInFile(str, path, reporter); err != nil {
 					return err
 				}
 			}

@@ -25,7 +25,7 @@ type FindReplacer struct {
 
 }
 
-func (f *FindReplacer) FindSubstr(params FindParams, scanner LineScanner, reporter Reporter) error {
+func (f *FindReplacer) FindSubstr(params FindParams, scanner LineScanner, reporter Reporter, changer LineScannerChanger) error {
 	if params.Path == "" {
 		return f.findSubstrInConsoleInput(params.Substr, scanner, reporter)
 	}
@@ -34,7 +34,7 @@ func (f *FindReplacer) FindSubstr(params FindParams, scanner LineScanner, report
 		return err
 	}
 	if isDir {
-		return f.findSubstrInDirectory(params.Substr, params.Path, reporter, scanner)
+		return f.findSubstrInDirectory(params.Substr, params.Path, reporter, scanner, changer)
 	} else {
 		return f.findSubstrInFile(params.Substr, params.Path, reporter, scanner)
 	}
@@ -108,7 +108,7 @@ func (f *FindReplacer) findSubstrInFile(str, path string, reporter Reporter, sca
 	return nil
 }
 
-func (f *FindReplacer) findSubstrInDirectory(str, dir string, reporter Reporter, scanner LineScanner) error {
+func (f *FindReplacer) findSubstrInDirectory(str, dir string, reporter Reporter, scanner LineScanner, changer LineScannerChanger) error {
 	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -116,6 +116,7 @@ func (f *FindReplacer) findSubstrInDirectory(str, dir string, reporter Reporter,
 			}
 			if info.IsDir() == false {
 				// scanner, _ := infrastructure.NewFileScanner(path)
+				scanner, _ = changer.ChangeScanner(path)
 				if err := f.findSubstrInFile(str, path, reporter, scanner); err != nil {
 					return err
 				}

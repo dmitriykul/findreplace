@@ -8,6 +8,10 @@ type LineScanner interface {
 	ReadLine() (bool, string, error)
 }
 
+type LineScannerChanger interface {
+	ChangeScanner(path string) (LineScanner, error)
+}
+
 type TextStore interface {
 	StoreText(text []byte, file string) error
 }

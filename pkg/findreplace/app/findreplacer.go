@@ -1,6 +1,7 @@
 package app
 
 import (
+	"findreplace/pkg/findreplace/infrastructure/workerpool"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -109,24 +110,39 @@ func (f *FindReplacer) findSubstrInFile(str, path string, reporter Reporter, sca
 }
 
 func (f *FindReplacer) findSubstrInDirectory(str, dir string, reporter Reporter, scanner LineScanner) error {
+	var allTask []*workerpool.Task
+	i := 1
 	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 			if info.IsDir() == false {
-				if err := scanner.NewScanner(path); err != nil {
+				/*if err := scanner.NewScanner(path); err != nil {
 					return err
-				}
-				if err := f.findSubstrInFile(str, path, reporter, scanner); err != nil {
+				}*/
+				/*if err := f.findSubstrInFile(str, path, reporter, scanner); err != nil {
 					return err
-				}
+				}*/
+
+				task := workerpool.NewTask(func(data interface{}) error {
+					if err := scanner.NewScanner(path); err != nil {
+						return err
+					}
+					return f.findSubstrInFile(str, path, reporter, scanner)
+				}, i)
+				i += 1
+				allTask = append(allTask, task)
 			}
 			return nil
 		})
+
 	if err != nil {
 		return err
 	}
+
+	pool := workerpool.NewPool(allTask, 2)
+	pool.Run()
 
 	return nil
 }

@@ -25,15 +25,13 @@ func findReplace(args []string) error {
 			params.Substr = args[1]
 			scanner := infrastructure.NewConsoleLineScanner()
 			reporter := infrastructure.NewReporter()
-			changer := infrastructure.NewFileScannerChanger()
-			return findReplacer.FindSubstr(params, scanner, reporter, changer)
+			return findReplacer.FindSubstr(params, scanner, reporter)
 		case 3:
 			params.Substr = args[1]
 			params.Path = args[2]
 			scanner, _ := infrastructure.NewFileScanner(params.Path)
 			reporter := infrastructure.NewReporter()
-			changer := infrastructure.NewFileScannerChanger()
-			return findReplacer.FindSubstr(params, scanner, reporter, changer)
+			return findReplacer.FindSubstr(params, scanner, reporter)
 		default:
 			return errors.New("missing find arguments: <substr> [<path>]")
 		}

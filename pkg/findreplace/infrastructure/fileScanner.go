@@ -35,3 +35,13 @@ func (f *fileScanner) ReadLine() (bool, string, error) {
 
 	return f.res, f.scanner.Text(), nil
 }
+
+func (f *fileScanner) NewScanner(path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	f.scanner = bufio.NewScanner(file)
+
+	return nil
+}

@@ -6,6 +6,7 @@ type Reporter interface {
 
 type LineScanner interface {
 	ReadLine() (bool, string, error)
+	NewScanner(path string) error
 }
 
 type LineScannerChanger interface {

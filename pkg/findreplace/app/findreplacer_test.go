@@ -3,6 +3,7 @@ package app_test
 import (
 	"findreplace/pkg/findreplace/app"
 	"findreplace/pkg/findreplace/infrastructure"
+	"findreplace/pkg/findreplace/infrastructure/mock"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -25,13 +26,41 @@ type TestFindParams struct {
 type TestReplaceParams struct {
 	params app.ReplaceParams
 	store app.TextStore
+	reporter app.Reporter
+	scanner app.LineScanner
 }
 
 func TestFindInConsoleInput(t *testing.T) {
-	
+	var findReplacer app.FindReplacer
+	var params TestFindParams
+	params.initializeTestFindParams("console")
+
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	findReplacer.FindSubstr(params.params, params.scanner, params.reporter)
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = rescueStdout
+	if string(out) != "1 - papapa\n" {
+		t.Fatalf("Expected '1 - papapa' but was: %s", out)
+	}
 }
 func TestReplaceInConsoleInput(t *testing.T) {
+	var findReplacer app.FindReplacer
+	var params TestReplaceParams
+	params.initializeTestReplaceParams("console")
 
+	rescueStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	findReplacer.ReplaceSubstr(params.params, params.store, params.reporter, params.scanner)
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = rescueStdout
+	if string(out) != "rarara\n" {
+		t.Fatalf("Expected 'rarara' but was: %s", out)
+	}
 }
 
 func TestFindInfile(t *testing.T) {
@@ -56,7 +85,7 @@ func TestReplaceInFile(t *testing.T) {
 	var params TestReplaceParams
 	params.initializeTestReplaceParams("file")
 
-	findReplacer.ReplaceSubstr(params.params, params.store)
+	findReplacer.ReplaceSubstr(params.params, params.store, params.reporter, params.scanner)
 	input, _ := ioutil.ReadFile("test/file.txt")
 	if string(input) != "rararara" {
 		t.Fatalf("Expected 'rararara' but was: %s", input)
@@ -84,7 +113,7 @@ func TestReplaceInDir(t *testing.T) {
 	var findReplacer app.FindReplacer
 	var params TestReplaceParams
 	params.initializeTestReplaceParams("dir")
-	findReplacer.ReplaceSubstr(params.params, params.store)
+	findReplacer.ReplaceSubstr(params.params, params.store, params.reporter, params.scanner)
 	input, _ := ioutil.ReadFile("test/file.txt")
 	if string(input) != "rarara" {
 		t.Fatalf("Expected 'rarara' but was: %s", input)
@@ -114,7 +143,8 @@ func (t *TestFindParams) initializeTestFindParams(source string) {
 		t.scanner, _ = infrastructure.NewFileScanner("test/file.txt")
 		t.reporter = infrastructure.NewReporter()
 	} else if source == "console" {
-		t.scanner = nil
+		t.params.Path = ""
+		t.scanner = mock.NewConsoleLineScanner()
 		t.reporter = infrastructure.NewReporter()
 	}
 }
@@ -136,5 +166,9 @@ func (t *TestReplaceParams) initializeTestReplaceParams(source string) {
 		os.WriteFile("test/subTest/file2.txt", []byte("pa"), 0777)
 		t.params.Path = "test"
 		t.store = infrastructure.NewFileTextStore()
+	} else if source == "console" {
+		t.store = nil
+		t.reporter = infrastructure.NewReporter()
+		t.scanner = mock.NewConsoleLineScanner()
 	}
 }

@@ -1,8 +1,6 @@
 package app
 
 import (
-	"bufio"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -42,9 +40,9 @@ func (f *FindReplacer) FindSubstr(params FindParams, scanner LineScanner, report
 
 }
 
-func (f *FindReplacer) ReplaceSubstr(params ReplaceParams, store TextStore) error {
+func (f *FindReplacer) ReplaceSubstr(params ReplaceParams, store TextStore, reporter Reporter, scanner LineScanner) error {
 	if params.Path == "" {
-		return f.replaceSubstrInConsoleInput(params.Substr, params.Replacement)
+		return f.replaceSubstrInConsoleInput(params.Substr, params.Replacement, reporter, scanner)
 	}
 	isDir, err := isDirectory(params.Path)
 	if err != nil {
@@ -74,13 +72,16 @@ func (f *FindReplacer) findSubstrInConsoleInput(str string, scanner LineScanner,
 	lineNo := 0
 	for {
 		lineNo += 1
-		_, text, err := scanner.ReadLine()
+		exit, text, err := scanner.ReadLine()
 		if err != nil {
 			return err
 		}
 		if strings.Contains(text, str) {
 			s := strconv.Itoa(lineNo) + " - " + text
 			reporter.PrintLine(s)
+		}
+		if !exit {
+			break
 		}
 	}
 
@@ -130,16 +131,13 @@ func (f *FindReplacer) findSubstrInDirectory(str, dir string, reporter Reporter,
 	return nil
 }
 
-func (f *FindReplacer) replaceSubstrInConsoleInput(old, new string) error {
-	var text string
-	myScanner := bufio.NewScanner(os.Stdin)
-	myScanner.Scan()
-	text = myScanner.Text()
-
-	if err := myScanner.Err(); err != nil {
+func (f *FindReplacer) replaceSubstrInConsoleInput(old, new string, reporter Reporter, scanner LineScanner) error {
+	_, text, err := scanner.ReadLine()
+	if err != nil {
 		return err
 	}
-	fmt.Println(strings.ReplaceAll(text, old, new))
+
+	reporter.PrintLine(strings.ReplaceAll(text, old, new))
 
 	return nil
 }

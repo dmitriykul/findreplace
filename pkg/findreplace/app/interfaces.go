@@ -7,6 +7,7 @@ type Reporter interface {
 type LineScanner interface {
 	ReadLine() (bool, string, error)
 	NewScanner(path string) error
+	GetFileName() string
 }
 
 type LineScannerChanger interface {

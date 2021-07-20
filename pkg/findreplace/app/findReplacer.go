@@ -89,7 +89,6 @@ func (f *FindReplacer) findSubstrInConsoleInput(str string, scanner LineScanner,
 
 func (f *FindReplacer) findSubstrInFile(str, path string, reporter Reporter, scanner LineScanner) error {
 	lineNo := 0
-	separatedPath := strings.Split(path, "\\")
 	text := ""
 	res := true
 	for res {
@@ -100,7 +99,7 @@ func (f *FindReplacer) findSubstrInFile(str, path string, reporter Reporter, sca
 		}
 		lineNo += 1
 		if strings.Contains(text, str) {
-			text := separatedPath[len(separatedPath)-1] + ":" + strconv.Itoa(lineNo) + " - " + text
+			text := scanner.GetFileName() + ":" + strconv.Itoa(lineNo) + " - " + text
 			reporter.PrintLine(text)
 		}
 	}

@@ -4,22 +4,25 @@ import (
 	"bufio"
 	"findreplace/pkg/findreplace/app"
 	"os"
+	"path/filepath"
 )
 
 type fileScanner struct {
 	file    *os.File
 	scanner *bufio.Scanner
 	res     bool
+	fileName string
 }
 
 func NewFileScanner(path string) (app.LineScanner, error) {
+	fileName := filepath.Base(path)
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	scanner := bufio.NewScanner(file)
 
-	return &fileScanner{scanner: scanner, file: file, res: true}, nil
+	return &fileScanner{scanner: scanner, file: file, res: true, fileName: fileName}, nil
 }
 
 func (f *fileScanner) ReadLine() (bool, string, error) {
@@ -37,6 +40,7 @@ func (f *fileScanner) ReadLine() (bool, string, error) {
 }
 
 func (f *fileScanner) NewScanner(path string) error {
+	f.fileName = filepath.Base(path)
 	file, err := os.Open(path)
 	if err != nil {
 		return err
@@ -44,4 +48,8 @@ func (f *fileScanner) NewScanner(path string) error {
 	f.scanner = bufio.NewScanner(file)
 
 	return nil
+}
+
+func (f *fileScanner) GetFileName() string {
+	return f.fileName
 }

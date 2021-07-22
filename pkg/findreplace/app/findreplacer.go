@@ -24,7 +24,7 @@ type FindReplacer struct {
 
 }
 
-func (f *FindReplacer) FindSubstr(params FindParams, scanner LineScanner, reporter Reporter) error {
+func (f *FindReplacer) FindSubstr(params FindParams, scanner LineScannerFactory, reporter Reporter) error {
 	if params.Path == "" {
 		return f.findSubstrInConsoleInput(params.Substr, scanner, reporter)
 	}
@@ -41,7 +41,7 @@ func (f *FindReplacer) FindSubstr(params FindParams, scanner LineScanner, report
 
 }
 
-func (f *FindReplacer) ReplaceSubstr(params ReplaceParams, store TextStore, reporter Reporter, scanner LineScanner) error {
+func (f *FindReplacer) ReplaceSubstr(params ReplaceParams, store TextStore, reporter Reporter, scanner LineScannerFactory) error {
 	if params.Path == "" {
 		return f.replaceSubstrInConsoleInput(params.Substr, params.Replacement, reporter, scanner)
 	}
@@ -69,11 +69,12 @@ func isDirectory(path string) (bool, error) {
 	return fi.IsDir(), nil
 }
 
-func (f *FindReplacer) findSubstrInConsoleInput(str string, scanner LineScanner, reporter Reporter) error {
+func (f *FindReplacer) findSubstrInConsoleInput(str string, scanner LineScannerFactory, reporter Reporter) error {
 	lineNo := 0
+	consoleScanner, _ := scanner.CreateScanner("")
 	for {
 		lineNo += 1
-		exit, text, err := scanner.ReadLine()
+		exit, text, err := consoleScanner.ReadLine()
 		if err != nil {
 			return err
 		}
@@ -89,19 +90,23 @@ func (f *FindReplacer) findSubstrInConsoleInput(str string, scanner LineScanner,
 	return nil
 }
 
-func (f *FindReplacer) findSubstrInFile(str, path string, reporter Reporter, scanner LineScanner) error {
+func (f *FindReplacer) findSubstrInFile(str, path string, reporter Reporter, scanner LineScannerFactory) error {
 	lineNo := 0
 	text := ""
 	res := true
+	fileScanner, err := scanner.CreateScanner(path)
+	if err != nil {
+		return err
+	}
 	for res {
 		var err error
-		res, text, err = scanner.ReadLine()
+		res, text, err = fileScanner.ReadLine()
 		if err != nil {
 			return err
 		}
 		lineNo += 1
 		if strings.Contains(text, str) {
-			text := scanner.GetFileName() + ":" + strconv.Itoa(lineNo) + " - " + text
+			text := fileScanner.GetFileName() + ":" + strconv.Itoa(lineNo) + " - " + text
 			reporter.PrintLine(text)
 		}
 	}
@@ -109,7 +114,7 @@ func (f *FindReplacer) findSubstrInFile(str, path string, reporter Reporter, sca
 	return nil
 }
 
-func (f *FindReplacer) findSubstrInDirectory(str, dir string, reporter Reporter, scanner LineScanner) error {
+func (f *FindReplacer) findSubstrInDirectory(str, dir string, reporter Reporter, scanner LineScannerFactory) error {
 	var allTask []*workerpool.Task
 	i := 1
 	err := filepath.Walk(dir,
@@ -118,17 +123,7 @@ func (f *FindReplacer) findSubstrInDirectory(str, dir string, reporter Reporter,
 				return err
 			}
 			if info.IsDir() == false {
-				/*if err := scanner.NewScanner(path); err != nil {
-					return err
-				}*/
-				/*if err := f.findSubstrInFile(str, path, reporter, scanner); err != nil {
-					return err
-				}*/
-
 				task := workerpool.NewTask(func(data interface{}) error {
-					if err := scanner.NewScanner(path); err != nil {
-						return err
-					}
 					return f.findSubstrInFile(str, path, reporter, scanner)
 				}, i)
 				i += 1
@@ -141,14 +136,15 @@ func (f *FindReplacer) findSubstrInDirectory(str, dir string, reporter Reporter,
 		return err
 	}
 
-	pool := workerpool.NewPool(allTask, 2)
+	pool := workerpool.NewPool(allTask, 4)
 	pool.Run()
 
 	return nil
 }
 
-func (f *FindReplacer) replaceSubstrInConsoleInput(old, new string, reporter Reporter, scanner LineScanner) error {
-	_, text, err := scanner.ReadLine()
+func (f *FindReplacer) replaceSubstrInConsoleInput(old, new string, reporter Reporter, scanner LineScannerFactory) error {
+	consoleScanner, _ := scanner.CreateScanner("")
+	_, text, err := consoleScanner.ReadLine()
 	if err != nil {
 		return err
 	}

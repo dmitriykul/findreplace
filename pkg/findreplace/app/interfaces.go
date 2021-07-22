@@ -17,3 +17,11 @@ type LineScannerChanger interface {
 type TextStore interface {
 	StoreText(text []byte, file string) error
 }
+
+type Scanner interface {
+	ReadLine() (bool, string, error)
+}
+
+type LineScannerFactory interface {
+	CreateScanner(path string) (LineScanner, error)
+}

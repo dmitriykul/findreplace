@@ -25,10 +25,6 @@ func(l *consoleScanner) ReadLine() (bool, string, error) {
 	return res, l.text, nil
 }
 
-func(l *consoleScanner) NewScanner(path string) error {
-	return nil
-}
-
 func(l *consoleScanner) GetFileName() string {
 	return ""
 }

@@ -39,17 +39,6 @@ func (f *fileScanner) ReadLine() (bool, string, error) {
 	return f.res, f.scanner.Text(), nil
 }
 
-func (f *fileScanner) NewScanner(path string) error {
-	f.fileName = filepath.Base(path)
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	f.scanner = bufio.NewScanner(file)
-
-	return nil
-}
-
 func (f *fileScanner) GetFileName() string {
 	return f.fileName
 }

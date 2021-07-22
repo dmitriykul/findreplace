@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# This script called from Makefile
+# It calls 'go build' to build command package
+
+set -o errexit
+
+if [ ! -d "$1" ] || [ ! -d "$(dirname "$2")" ]; then
+    echo "usage: $(basename "$0") <path-to-cmd-package> <path-to-output-file>" 1>&2
+    exit 1
+fi
+
+CMD_PACKAGE_DIR=$1
+EXECUTABLE_PATH=$2
+GO_SRC_FILES=$(find "$CMD_PACKAGE_DIR" -name "*.go" | tr "\n" " ")
+
+GOOS=$(go env GOOS)
+if [ "$GOOS" = "windows" ]; then
+    EXECUTABLE_PATH=${EXECUTABLE_PATH}.exe
+fi
+
+echo_call() {
+    echo "$@"
+    "$@"
+}
+
+# Disable CGO - we don't need it.
+export CGO_ENABLED=0
+
+# shellcheck disable=SC2086
+echo_call go build -v \
+    -ldflags "-X main.AppVersion=$APP_VERSION -X main.AppRevision=$APP_REVISION" \
+    -o "$EXECUTABLE_PATH" \
+    $GO_SRC_FILES

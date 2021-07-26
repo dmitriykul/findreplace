@@ -6,7 +6,7 @@ GIT_COMMIT := $(shell git rev-parse HEAD)
 export APP_VERSION=$(RELEASE_VERSION)
 export APP_REVISION=$(GIT_COMMIT)
 
-DOCKER_IMAGE_FINDREPLACE=harbor.ispring.lan/infrastructure/findreplace:$(RELEASE_VERSION)
+DOCKER_IMAGE_FINDREPLACE=infrastructure/findreplace:$(RELEASE_VERSION)
 
 GOPATH := $(shell go env GOPATH)
 export PATH := $(GOPATH)/bin:$(PATH)
